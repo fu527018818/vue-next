@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reactive</title>
+</head>
+<body>
+    <script src="../../dist/reactivity.global.js"></script>
+    <script>
+        const { reactive, toRaw } = VueReactivity
+
+        // toRaw on object using reactive as prototype
+        const o = { a: 1 }
+        const original = reactive(o)
+        const obj = Object.create(original)
+        const raw = toRaw(obj)
+        console.log(raw === obj)
+        console.log(raw === toRaw(original))
+
+    </script>
+</body>
+</html>
