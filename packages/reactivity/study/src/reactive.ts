@@ -37,9 +37,9 @@ const isObservableType = /*#__PURE__*/ makeMap(
 
 const canObserve = (value: Target): boolean => {
   return (
-    !value[ReactiveFlags.SKIP] &&
-    isObservableType(toRawType(value)) &&
-    !Object.isFrozen(value)
+    !value[ReactiveFlags.SKIP] && // target如果有__v_skip属性,则不能被观察
+    isObservableType(toRawType(value)) && // target只有Object,Array,Map,Set,WeakMap,WeakSet这几个类型才能被观察
+    !Object.isFrozen(value) // target如果被冻结了也不能被观察
   )
 }
 
@@ -127,13 +127,16 @@ function createReactiveObject(
   collectionHandlers: ProxyHandler<any>
 ) {
   if (!isObject(target)) {
+    // 判断target是不是 Object,Array,Map,Set,WeakMap,WeakSet 这几种类型
     if (__DEV__) {
-      console.warn(`value cannot be made reactive: ${String(target)}`)
+      console.warn(`value cannot be made reactive: ${String(target)}`) // 不是的话则提示
     }
     return target
   }
   // target is already a Proxy, return it.
   // exception: calling readonly() on a reactive object
+  // spec: observing already observed value should return same Proxy
+  // spec: wrapping already wrapped value should return same Proxy
   if (
     target[ReactiveFlags.RAW] &&
     !(isReadonly && target[ReactiveFlags.IS_REACTIVE])
@@ -143,20 +146,22 @@ function createReactiveObject(
   // target already has corresponding Proxy
   const reactiveFlag = isReadonly
     ? ReactiveFlags.READONLY
-    : ReactiveFlags.REACTIVE
+    : ReactiveFlags.REACTIVE // 拿到__v_isReactive 或者 __v_isReadonly
   if (hasOwn(target, reactiveFlag)) {
-    return target[reactiveFlag]
+    // 如果被代理过的对象,肯定有reactiveFlag属性
+    return target[reactiveFlag] // 则直接返回被代理过后的对象
   }
   // only a whitelist of value types can be observed.
   if (!canObserve(target)) {
-    return target
+    // 如果不在可被观察的白名单中
+    return target // 返回原始target
   }
   const observed = new Proxy(
     target,
-    collectionTypes.has(target.constructor) ? collectionHandlers : baseHandlers
+    collectionTypes.has(target.constructor) ? collectionHandlers : baseHandlers // Object/Array类型使用baseHandlers  Map,Set,WeakMap,WeakSet类型使用collectionHandlers
   )
-  def(target, reactiveFlag, observed)
-  return observed
+  def(target, reactiveFlag, observed) // 通过Object.defineProperty给target添加reactiveFlag这个key,value值为被代理的对象observed
+  return observed // 返回被代理的对象
 }
 
 export function isReactive(value: unknown): boolean {

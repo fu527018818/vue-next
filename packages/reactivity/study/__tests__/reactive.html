@@ -8,16 +8,70 @@
 <body>
     <script src="../../dist/reactivity.global.js"></script>
     <script>
-        const { reactive, toRaw } = VueReactivity
+        const { reactive, isReactive, toRaw, ref, isRef, computed } = VueReactivity
+
+        // Object
+        /* const original = { foo: 1 }
+        const observed = reactive(original)
+        console.log(observed !== original)
+        console.log(isReactive(observed))
+        console.log(isReactive(original))
+        // get
+        console.log(observed.foo)
+        // has
+        console.log('foo' in observed)
+        // ownKeys
+        console.log(Object.keys(observed)) // ['foo'] */
 
         // toRaw on object using reactive as prototype
-        const o = { a: 1 }
+        /* const o = { a: 1 }
         const original = reactive(o)
         const obj = Object.create(original)
         const raw = toRaw(obj)
         console.log(raw === obj)
-        console.log(raw === toRaw(original))
+        console.log(raw === toRaw(original)) */
 
+        // should not unwrap Ref<T>
+        /* const observedNumberRef = reactive(ref(1))
+        const observedObjectRef = reactive(ref({ foo: 1 }))
+
+        console.log(isRef(observedNumberRef))
+        console.log(isRef(observedObjectRef)) */
+
+        // should unwrap computed refs
+        /* // readonly
+        const a = computed(() => 1)
+        // writable
+        const b = computed({
+            get: () => 1,
+            set: () => {}
+        })
+        const obj = reactive({ a, b })
+        // check type
+        obj.a + 1
+        obj.b + 1
+        console.log(typeof obj.a)
+        console.log(typeof obj.b) */
+
+        // should allow setting property from a ref to another ref
+        /* const foo = ref(0)
+        const bar = ref(1)
+        const observed = reactive({ a: foo })
+        const dummy = computed(() => observed.a)
+        console.log(dummy.value)
+
+        observed.a = bar
+        console.log(dummy.value)
+
+        bar.value++
+        console.log(dummy.value) */
+
+        // observing already observed value should return same Proxy // tip: 对应源码139-144
+        const original = { foo: 1 }
+        const observed = reactive(original)
+        const observed2 = reactive(observed)
+        console.log(observed2 === observed)
+        
     </script>
 </body>
 </html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>readonly</title>
+</head>
+<body>
+    <script src="../../dist/reactivity.global.js"></script>
+    <script>
+        const { reactive, readonly, isReactive, isReadonly, toRaw, ref, isRef, computed } = VueReactivity
+
+        // wrapping already wrapped value should return same Proxy  // tip: 对应源码139-144
+        /* const original = { foo: 1 }
+        const wrapped = readonly(original)
+        const wrapped2 = readonly(wrapped)
+        console.log(wrapped2 === wrapped) */
+
+        // readonly should track and trigger if wrapping reactive original
+        const a = reactive({ n: 1 })
+        const b = readonly(a)
+
+        console.log(isReactive(b))
+
+        // const a = readonly({ n: 1 })
+        // const b = reactive(a)
+
+        // console.log(isReactive(b), isReadonly(b))
+        
+    </script>
+</body>
+</html>
