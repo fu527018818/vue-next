@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>effect</title>
+</head>
+<body>
+    <script src="../../dist/reactivity.global.js"></script>
+    <script>
+        const { reactive, readonly, isReactive, isReadonly, toRaw, ref, isRef, computed, effect } = VueReactivity
+
+        // should observe iteration
+        /* let dummy
+        const list = reactive(['Hello'])
+        effect(() => (dummy = list.join(' ')))
+
+        console.log(dummy)
+        list.push('World!')
+        console.log(dummy)
+        list.shift()
+        console.log(dummy) */
+
+        // should trigger all effects when array length is set 0
+        const observed= reactive([1])
+        let dummy, record
+        effect(() => {
+            dummy = observed.length
+        })
+        effect(() => {
+            record = observed[0]
+        })
+        console.log(dummy)
+        console.log(record)
+
+        observed[1] = 2
+        console.log(observed[1])
+
+        observed.unshift(3)
+        console.log(dummy)
+        console.log(record)
+
+        observed.length = 0
+        console.log(dummy)
+        console.log(record)
+    </script>
+</body>
+</html>

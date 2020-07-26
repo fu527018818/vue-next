@@ -224,8 +224,7 @@ export function trigger(
   } else if (key === 'length' && isArray(target)) {
     // key为length且target是数组
     depsMap.forEach((dep, key) => {
-      if (key === 'length' || key >= (newValue as number)) {
-        // ?
+      if (key === 'length' || key >= (newValue as number)) { // effect.spec: should observe iteration /effect.spec: should observe sparse array mutations /effect.spec: should trigger all effects when array length is set 0 
         add(dep)
       }
     })
