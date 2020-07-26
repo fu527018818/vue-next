@@ -165,27 +165,33 @@ function createReactiveObject(
 }
 
 export function isReactive(value: unknown): boolean {
+  // 判断value是否是响应式对象
   if (isReadonly(value)) {
-    return isReactive((value as Target)[ReactiveFlags.RAW])
+    // 如果是只读响应式对象
+    return isReactive((value as Target)[ReactiveFlags.RAW]) // 继续判断是否响应式对象  spec: readonly should track and trigger if wrapping reactive original
   }
-  return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
+  return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE]) // 非只读响应式对象，判断value的__v_isReactive属性，如果value是被代理对象则会执行相应的get
 }
 
 export function isReadonly(value: unknown): boolean {
-  return !!(value && (value as Target)[ReactiveFlags.IS_READONLY])
+  // 判断value是否是只读响应式对象
+  return !!(value && (value as Target)[ReactiveFlags.IS_READONLY]) // 读取value的__v_isReadonly属性,如果是value是被代理的对象会执行get,如果是普通对象则正常判断
 }
 
 export function isProxy(value: unknown): boolean {
-  return isReactive(value) || isReadonly(value)
+  // 判断value是否被代理过
+  return isReactive(value) || isReadonly(value) // 如果是响应式数据或者只读响应式数据则是被代理过的
 }
 
 export function toRaw<T>(observed: T): T {
+  // 根据observed返回原始对象
   return (
-    (observed && toRaw((observed as Target)[ReactiveFlags.RAW])) || observed
+    (observed && toRaw((observed as Target)[ReactiveFlags.RAW])) || observed // 如果observed是被代理对象，会执行get，如果找到原始对象则返回原始对象，否则返回observed
   )
 }
 
 export function markRaw<T extends object>(value: T): T {
-  def(value, ReactiveFlags.SKIP, true)
-  return value
+  // 给value添加__v_skip属性，调用reactive或者readonly方法时，该对象则不会被代理
+  def(value, ReactiveFlags.SKIP, true) // 通过Object.defineProperty给value添加__v_skip属性,值为true
+  return value // 返回加工后的对象
 }

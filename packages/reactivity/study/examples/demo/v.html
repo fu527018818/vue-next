@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v</title>
+</head>
+<body>
+    <script src="./js/vue.js"></script>
+    <script src="../../../dist/reactivity.global.js"></script>
+    <script src="./js/v.js"></script>
+    <div id="app"></div>
+
+    <script>
+        const v = new V({
+            props: {
+				xzw: {
+					type: String,
+					default: 'xzw'
+				}
+			},
+            data: {
+                msg: 'hi',
+                arr: [1,2,3,4,5],
+                obj: {
+                    a: [1, 2, 3]
+                }
+            },
+            methods: {
+                handlerClick() {
+                    const arr = this.obj.a
+                    arr.push(arr[arr.length - 1] + 1)
+                }
+            },
+            template: `
+                <div class="hello">
+                    <input v-model="msg" />
+                    <h4>{{ msg }}</h4>
+                    <h4>{{ xzw }}</h4>
+                    <button @click="handlerClick">+1</button>
+                    <ul>
+                        <li v-for="num in obj.a">{{ num }}</li>
+                    </ul>
+                </div>
+            `
+        }).$mount('#app')
+
+
+        /* const HelloWord = {
+			name: 'HelloWord',
+			props: ['flag'],
+			data() {
+				return {
+					msg: 'hi'
+				}
+            },
+            methods: {
+                handlerClick() {
+                    this.flag = !this.flag
+                }
+            },
+			template: `
+			    <div v-if="flag">
+			        我是HelloWord组件div内容
+			        <span>{{ msg }}</span>
+			    </div>
+			    <ul v-else>
+                    <li> 我是HelloWord组件ul下的内容 </li>
+                    <button @click="handlerClick">禁止修改父组件的props值</button>
+			    </ul>
+			`
+		}
+
+		const App = {
+			name: 'App',
+			components: { HelloWord },
+			data() {
+				return {
+					flag: true
+				}
+			},
+			methods: {
+				toggle() {
+					this.flag = !this.flag
+				}
+			},
+			template: `
+			    <div id="app">
+			        <button @click="toggle">toggle</button>
+			        <HelloWord :flag="flag" class="test"></HelloWord>
+			    </div>
+			`
+		}
+
+		const vm = new V({
+			name: 'Root',
+			render: h => h(App)
+		}).$mount('#app') */
+        
+        
+    </script>
+</body>
+</html>
