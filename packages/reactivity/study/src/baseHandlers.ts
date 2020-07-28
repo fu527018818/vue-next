@@ -11,10 +11,10 @@ import {
 } from '@vue/shared'
 import { isRef } from './ref'
 
-const builtInSymbols = new Set(
-  Object.getOwnPropertyNames(Symbol)
-    .map(key => (Symbol as any)[key])
-    .filter(isSymbol)
+const builtInSymbols = new Set( 
+  Object.getOwnPropertyNames(Symbol) // 拿到Symbol对象所有自身属性的属性名(含不可枚举且属性名不是symbol类型)
+    .map(key => (Symbol as any)[key]) // 拿到Symbol对象所有自身属性的属性名对应的属性值
+    .filter(isSymbol) // 过滤属性值为非symbol类型的值
 )
 
 const get = /*#__PURE__*/ createGetter()
@@ -40,58 +40,58 @@ const arrayInstrumentations: Record<string, Function> = {}
   }
 })
 
-function createGetter(isReadonly = false, shallow = false) {
-  return function get(target: object, key: string | symbol, receiver: object) {
-    if (key === ReactiveFlags.IS_REACTIVE) {
-      return !isReadonly
-    } else if (key === ReactiveFlags.IS_READONLY) {
-      return isReadonly
+function createGetter(isReadonly = false, shallow = false) { // 创建get函数
+  return function get(target: object, key: string | symbol, receiver: object) { // target: 被代理的原始对象 key: target对象的属性名key receiver: 代理对象
+    if (key === ReactiveFlags.IS_REACTIVE) { // key === '__v_isReactive'
+      return !isReadonly // isReadonly取反
+    } else if (key === ReactiveFlags.IS_READONLY) { // key === '__v_isReadonly'
+      return isReadonly // isReadonly
     } else if (
-      key === ReactiveFlags.RAW &&
+      key === ReactiveFlags.RAW && // key === '__v_raw'
       receiver ===
         (isReadonly
-          ? (target as any)[ReactiveFlags.READONLY]
-          : (target as any)[ReactiveFlags.REACTIVE])
+          ? (target as any)[ReactiveFlags.READONLY] // target['__v_readonly']
+          : (target as any)[ReactiveFlags.REACTIVE]) // target['__v_reactive']
     ) {
-      return target
+      return target // 返回被代理的原始对象
     }
 
-    const targetIsArray = isArray(target)
-    if (targetIsArray && hasOwn(arrayInstrumentations, key)) {
-      return Reflect.get(arrayInstrumentations, key, receiver)
+    const targetIsArray = isArray(target) // target是否是数组
+    if (targetIsArray && hasOwn(arrayInstrumentations, key)) { // 如果是数组且key是'includes'|'indexOf'|'lastIndexOf', 则
+      return Reflect.get(arrayInstrumentations, key, receiver) // ? 通过数据变异的方法去收集依赖
     }
 
-    const res = Reflect.get(target, key, receiver)
+    const res = Reflect.get(target, key, receiver) // 获取到key对应的值
 
     if (
-      isSymbol(key)
-        ? builtInSymbols.has(key)
-        : key === `__proto__` || key === `__v_isRef`
+      isSymbol(key) // key如果是symbol类型的话
+        ? builtInSymbols.has(key) 
+        : key === `__proto__` || key === `__v_isRef` // 如果key是内置symbol 或者 key是 __proto__ | __v_isRef的话,直接返回res结果，不做依赖收集
     ) {
       return res
     }
 
-    if (!isReadonly) {
+    if (!isReadonly) { // 非只读则收集依赖
       track(target, TrackOpTypes.GET, key)
     }
 
-    if (shallow) {
+    if (shallow) { // 如果是浅的，不做依赖收集，直接返回结果
       return res
     }
 
-    if (isRef(res)) {
+    if (isRef(res)) { // 如果res是 ref对象
       // ref unwrapping, only for Objects, not for Arrays.
-      return targetIsArray ? res : res.value
+      return targetIsArray ? res : res.value // 触发 ref对象的get方法会进行依赖收集
     }
 
-    if (isObject(res)) {
+    if (isObject(res)) { // res如果是对象
       // Convert returned value into a proxy as well. we do the isObject check
       // here to avoid invalid value warning. Also need to lazy access readonly
       // and reactive here to avoid circular dependency.
-      return isReadonly ? readonly(res) : reactive(res)
+      return isReadonly ? readonly(res) : reactive(res) // 则转换成代理对象变成响应式数据
     }
 
-    return res
+    return res // 返回结果值
   }
 }
 
@@ -105,50 +105,50 @@ function createSetter(shallow = false) {
     value: unknown,
     receiver: object
   ): boolean {
-    const oldValue = (target as any)[key]
-    if (!shallow) {
-      value = toRaw(value)
-      if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
-        oldValue.value = value
-        return true
+    const oldValue = (target as any)[key] // 获取上一次的值
+    if (!shallow) { // 非浅的
+      value = toRaw(value) // 把value转换成原始值,比如value是响应式代理数据
+      if (!isArray(target) && isRef(oldValue) && !isRef(value)) { // 如果oldValue是ref对象，value不是ref对象
+        oldValue.value = value // 则触发oldValue的set方法进行trigger
+        return true // 设值成功
       }
     } else {
       // in shallow mode, objects are set as-is regardless of reactive or not
     }
 
-    const hadKey = hasOwn(target, key)
-    const result = Reflect.set(target, key, value, receiver)
+    const hadKey = hasOwn(target, key) // target对象是否含有key属性
+    const result = Reflect.set(target, key, value, receiver) // 给target设值
     // don't trigger if target is something up in the prototype chain of original
-    if (target === toRaw(receiver)) {
-      if (!hadKey) {
-        trigger(target, TriggerOpTypes.ADD, key, value)
-      } else if (hasChanged(value, oldValue)) {
-        trigger(target, TriggerOpTypes.SET, key, value, oldValue)
+    if (target === toRaw(receiver)) { // ? effect.spec: should not be triggered by inherited raw setters
+      if (!hadKey) { // 没有该key
+        trigger(target, TriggerOpTypes.ADD, key, value) // 触发更新
+      } else if (hasChanged(value, oldValue)) { // target有改key且值发生了变换
+        trigger(target, TriggerOpTypes.SET, key, value, oldValue) // 触发更新
       }
     }
-    return result
+    return result // 返回设置的结果
   }
 }
 
 function deleteProperty(target: object, key: string | symbol): boolean {
-  const hadKey = hasOwn(target, key)
-  const oldValue = (target as any)[key]
-  const result = Reflect.deleteProperty(target, key)
-  if (result && hadKey) {
-    trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
+  const hadKey = hasOwn(target, key) // target是否有key属性
+  const oldValue = (target as any)[key] // 获取key对应的值
+  const result = Reflect.deleteProperty(target, key) // 删除key
+  if (result && hadKey) { // 删除成功且有key
+    trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue) // 触发更新
   }
-  return result
+  return result // 返回删除的结果Boolean
 }
 
-function has(target: object, key: string | symbol): boolean {
-  const result = Reflect.has(target, key)
-  track(target, TrackOpTypes.HAS, key)
-  return result
+function has(target: object, key: string | symbol): boolean { // key in target
+  const result = Reflect.has(target, key) // target是否含有key属性
+  track(target, TrackOpTypes.HAS, key) // 收集依赖
+  return result // 返回结果值
 }
 
 function ownKeys(target: object): (string | number | symbol)[] {
-  track(target, TrackOpTypes.ITERATE, ITERATE_KEY)
-  return Reflect.ownKeys(target)
+  track(target, TrackOpTypes.ITERATE, ITERATE_KEY) // 收集依赖
+  return Reflect.ownKeys(target) // Reflect.ownKeys方法用于返回对象的所有属性，基本等同于Object.getOwnPropertyNames与Object.getOwnPropertySymbols之和
 }
 
 export const mutableHandlers: ProxyHandler<object> = {

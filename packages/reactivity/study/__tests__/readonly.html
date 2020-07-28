@@ -17,16 +17,16 @@
         console.log(wrapped2 === wrapped) */
 
         // readonly should track and trigger if wrapping reactive original
-        const a = reactive({ n: 1 })
-        const b = readonly(a)
+        // const a = reactive({ n: 1 })
+        // const b = readonly(a)
 
-        console.log(isReactive(b))
+        // console.log(isReactive(b))
 
-        /* const a = readonly({ n: 1 })
+        const a = readonly({ n: 1 })
         const b = reactive(a)
 
         console.log(isReactive(b))
-        console.log(isReadonly(b)) */
+        console.log(isReadonly(b))
         
     </script>
 </body>

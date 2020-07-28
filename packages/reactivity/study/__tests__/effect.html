@@ -22,7 +22,7 @@
         console.log(dummy) */
 
         // should trigger all effects when array length is set 0
-        const observed= reactive([1])
+        /* const observed= reactive([1])
         let dummy, record
         effect(() => {
             dummy = observed.length
@@ -42,7 +42,28 @@
 
         observed.length = 0
         console.log(dummy)
-        console.log(record)
+        console.log(record) */
+
+        // should not be triggered by inherited raw setters  baseHandlers.ts 122行
+        let dummy, parentDummy, hiddenValue
+        const obj = reactive({})
+        const parent = reactive({
+            set prop(value) {
+                hiddenValue = value
+            },
+            get prop() {
+                return hiddenValue
+            }
+        })
+        Object.setPrototypeOf(obj, parent)
+        effect(() => (dummy = obj.prop))
+        effect(() => (parentDummy = parent.prop))
+
+        console.log(dummy)
+        console.log(parentDummy)
+        toRaw(obj).prop = 4
+        console.log(dummy)
+        console.log(parentDummy)
     </script>
 </body>
 </html>
