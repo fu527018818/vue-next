@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ref</title>
+</head>
+<body>
+    <script src="../../dist/reactivity.global.js"></script>
+    <script>
+        const { reactive, readonly, isReactive, isReadonly, toRaw, ref, isRef, computed, effect } = VueReactivity
+
+        // should hold a value
+        /* const a = ref(1)
+        console.log(a.value) //toBe(1)
+        a.value = 2
+        console.log(a.value) //toBe(2) */
+
+        // should be reactive
+        /* const a = ref(1)
+        let dummy
+        let calls = 0
+        effect(() => {
+            calls++
+            dummy = a.value
+        })
+        console.log(calls) // toBe(1)
+        console.log(dummy) // toBe(1)
+        a.value = 2
+        console.log(calls) // toBe(2)
+        console.log(dummy) // toBe(2)
+        // same value should not trigger
+        a.value = 2
+        console.log(calls) // toBe(2)
+        console.log(dummy) // toBe(2)  */
+
+        // should make nested properties reactive
+        const a = ref({
+            count: 1
+        })
+        let dummy
+        effect(() => {
+            dummy = a.value.count
+        })
+        console.log(dummy) //toBe(1)
+        a.value.count = 2
+        console.log(dummy) //toBe(2)
+
+    </script>
+</body>
+</html>

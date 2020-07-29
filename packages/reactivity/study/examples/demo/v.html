@@ -26,6 +26,11 @@
                     a: [1, 2, 3]
                 }
             },
+            computed: {
+                reversedMsg() {
+                    return this.msg.split('').reverse().join('')
+                }
+            },
             methods: {
                 handlerClick() {
                     const arr = this.obj.a
@@ -36,7 +41,8 @@
                 <div class="hello">
                     <input v-model="msg" />
                     <h4>{{ msg }}</h4>
-                    <h4>{{ xzw }}</h4>
+                    <h4>计算属性reversedMsg： {{ reversedMsg }}</h4>
+                    <h4>prop: {{ xzw }}</h4>
                     <button @click="handlerClick">+1</button>
                     <ul>
                         <li v-for="num in obj.a">{{ num }}</li>
@@ -62,6 +68,9 @@
                 console.log('updated')
             }
         }).$mount('#app')
+
+        // v.msg = 'xzw'
+        // v.obj.a = ['a', 'b']
 
 
         /* const HelloWord = {

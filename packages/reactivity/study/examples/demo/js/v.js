@@ -2,7 +2,8 @@ window.V = (function() {
 	const {
 		reactive,
 		effect,
-		readonly
+		readonly,
+		computed
 	} = VueReactivity
 
 	const isSymbol = val => typeof val === 'symbol'
@@ -30,12 +31,19 @@ window.V = (function() {
 		}
 	}
 
+	let padding = false
+	const nextTick = function(fn) {
+		return Promise.resolve().then(() => {
+			return fn && fn()
+		})
+	}
+
 	function V(options) {
 		this.options = options
 		this.vm = new Vue({})
 
 		this.proxyV = null
-		this.$data = this.$methods = this.$props = this._props = {}
+		this.$data = this.$methods = this.$props = this._props = this.$computed = {}
 		this._isMounted = false
 		this._init(options)
 		return this.proxyV
@@ -48,6 +56,7 @@ window.V = (function() {
 			if ((value = options.data)) this._initData(value)
 			if ((value = options.props)) this._initProps(value)
 			this._proxy()
+			if ((value = options.computed)) this._initComputed(value)
 			if ((value = options.methods))
 				this._initMethods(this.vm._renderProxy, this.proxyV, value)
 			callHook(this, 'created')
@@ -71,6 +80,17 @@ window.V = (function() {
 					}
 				})
 			this.$props = readonly(this._props)
+		},
+		_initComputed(computedConfig) {
+			Object.keys(computedConfig)
+				.map(key => {
+					const value = computedConfig[key].bind(this.proxyV)
+					if (!Reflect.has(this.$computed, key)) {
+                        this[key] = this.$computed[key] = computed(value)
+					} else {
+						console.error(`computed key:${key} already exists!`)
+					}
+				})
 		},
 		_proxy() {
 			const data = this.$data
@@ -120,15 +140,24 @@ window.V = (function() {
 
 			const updateComponent = () => {
 				const isMounted = this._isMounted
+				const VNode = vm._render()
 
-				if (isMounted) {
-					callHook(this, 'beforeUpdate')
-				}
-
-				vm._update(vm._render(), false)
-
-				if (isMounted) {
-					callHook(this, 'updated')
+				if (!isMounted) {
+					vm._update(VNode, false)
+				} else {
+					if (!padding) {
+						padding = true
+						nextTick(() => {
+							callHook(this, 'beforeUpdate')
+							vm._update(vm._render(), false)
+							callHook(this, 'updated')
+							padding = false
+						})
+					}
+					// bug代码
+					// callHook(this, 'beforeUpdate')
+					// vm._update(VNode, false)
+					// callHook(this, 'updated')
 				}
 			}
 
