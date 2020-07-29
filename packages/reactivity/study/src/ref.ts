@@ -18,12 +18,12 @@ export interface Ref<T = any> {
 
 export type ToRefs<T = any> = { [K in keyof T]: Ref<T[K]> }
 
-const convert = <T extends unknown>(val: T): T =>
+const convert = <T extends unknown>(val: T): T => // 把除了null之外的对象,转换成响应式对象返回
   isObject(val) ? reactive(val) : val
 
 export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>
-export function isRef(r: any): r is Ref {
-  return r ? r.__v_isRef === true : false
+export function isRef(r: any): r is Ref { // 判断r是否是ref对象
+  return r ? r.__v_isRef === true : false // 根据 __v_isRef 属性判断
 }
 
 export function ref<T extends object>(
@@ -31,7 +31,7 @@ export function ref<T extends object>(
 ): T extends Ref ? T : Ref<UnwrapRef<T>>
 export function ref<T>(value: T): Ref<UnwrapRef<T>>
 export function ref<T = any>(): Ref<T | undefined>
-export function ref(value?: unknown) {
+export function ref(value?: unknown) { // 创建一个ref对象
   return createRef(value)
 }
 
@@ -42,21 +42,21 @@ export function shallowRef(value?: unknown) {
 }
 
 function createRef(rawValue: unknown, shallow = false) {
-  if (isRef(rawValue)) {
-    return rawValue
+  if (isRef(rawValue)) { // rawValue是ref对象的话
+    return rawValue // 直接返回rawValue
   }
-  let value = shallow ? rawValue : convert(rawValue)
+  let value = shallow ? rawValue : convert(rawValue) // 如果shallow是浅的,则把rawValue转成响应式数据
   const r = {
-    __v_isRef: true,
-    get value() {
-      track(r, TrackOpTypes.GET, 'value')
-      return value
+    __v_isRef: true, // ref标识
+    get value() { // get
+      track(r, TrackOpTypes.GET, 'value') // 收集依赖
+      return value // 返回结果值
     },
-    set value(newVal) {
-      if (hasChanged(toRaw(newVal), rawValue)) {
-        rawValue = newVal
-        value = shallow ? newVal : convert(newVal)
-        trigger(
+    set value(newVal) { // set
+      if (hasChanged(toRaw(newVal), rawValue)) { // 如果新老值不一样的话
+        rawValue = newVal // 把新值赋给rawValue变量
+        value = shallow ? newVal : convert(newVal) // 如果shallow是浅的,则把需要设置的值转成响应式数据
+        trigger( // 触发更新
           r,
           TriggerOpTypes.SET,
           'value',
@@ -65,10 +65,10 @@ function createRef(rawValue: unknown, shallow = false) {
       }
     }
   }
-  return r
+  return r // 返回ref对象
 }
 
-export function triggerRef(ref: Ref) {
+export function triggerRef(ref: Ref) { // 强制shallow类型的ref触发更新  ref.spec: shallowRef force trigger
   trigger(
     ref,
     TriggerOpTypes.SET,
@@ -77,7 +77,7 @@ export function triggerRef(ref: Ref) {
   )
 }
 
-export function unref<T>(ref: T): T extends Ref<infer V> ? V : T {
+export function unref<T>(ref: T): T extends Ref<infer V> ? V : T { // 如果是ref对象,则求值,不是的话则直接返回非ref值
   return isRef(ref) ? (ref.value as any) : ref
 }
 
@@ -89,45 +89,45 @@ export type CustomRefFactory<T> = (
   set: (value: T) => void
 }
 
-export function customRef<T>(factory: CustomRefFactory<T>): Ref<T> {
-  const { get, set } = factory(
+export function customRef<T>(factory: CustomRefFactory<T>): Ref<T> { // 创建一个自定义ref对象 ref.spec: customRef
+  const { get, set } = factory( // factory函数返回一个包含get,set属性的对象
     () => track(r, TrackOpTypes.GET, 'value'),
     () => trigger(r, TriggerOpTypes.SET, 'value')
   )
   const r = {
     __v_isRef: true,
     get value() {
-      return get()
+      return get() // 执行自定义get函数
     },
     set value(v) {
-      set(v)
+      set(v) // 执行自定义set函数
     }
   }
-  return r as any
+  return r as any // 返回ref对象
 }
 
 export function toRefs<T extends object>(object: T): ToRefs<T> {
-  if (__DEV__ && !isProxy(object)) {
-    console.warn(`toRefs() expects a reactive object but received a plain one.`)
+  if (__DEV__ && !isProxy(object)) { // 接收一个响应式对象
+    console.warn(`toRefs() expects a reactive object but received a plain one.`) // 普通对象的话，会提示
   }
   const ret: any = {}
   for (const key in object) {
-    ret[key] = toRef(object, key)
+    ret[key] = toRef(object, key) // key: ref对象
   }
   return ret
 }
 
-export function toRef<T extends object, K extends keyof T>(
+export function toRef<T extends object, K extends keyof T>( // object:一般为响应式对象 key:object的上的key属性
   object: T,
   key: K
 ): Ref<T[K]> {
-  return {
+  return { // 返回一个ref对象
     __v_isRef: true,
     get value(): any {
-      return object[key]
+      return object[key] // 求值时 触发响应式object对象的get方法去收集依赖
     },
     set value(newVal) {
-      object[key] = newVal
+      object[key] = newVal // 设值时 触发响应式object对象的set方法去触发更新
     }
   } as any
 }

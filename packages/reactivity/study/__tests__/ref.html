@@ -8,7 +8,22 @@
 <body>
     <script src="../../dist/reactivity.global.js"></script>
     <script>
-        const { reactive, readonly, isReactive, isReadonly, toRaw, ref, isRef, computed, effect } = VueReactivity
+        const { 
+            reactive, 
+            readonly, 
+            isReactive, 
+            isReadonly, 
+            toRaw, 
+            ref, 
+            isRef, 
+            computed, 
+            effect, 
+            unref, 
+            shallowRef, 
+            triggerRef,
+            toRef,
+            customRef
+        } = VueReactivity
 
         // should hold a value
         /* const a = ref(1)
@@ -35,7 +50,7 @@
         console.log(dummy) // toBe(2)  */
 
         // should make nested properties reactive
-        const a = ref({
+        /* const a = ref({
             count: 1
         })
         let dummy
@@ -44,7 +59,201 @@
         })
         console.log(dummy) //toBe(1)
         a.value.count = 2
-        console.log(dummy) //toBe(2)
+        console.log(dummy) //toBe(2) */
+
+        // should work without initial value
+        /* const a = ref()
+        let dummy
+        effect(() => {
+            dummy = a.value
+        })
+        console.log(dummy) // toBe(undefined)
+        a.value = 2
+        console.log(dummy) // toBe(2) */
+
+        // should work like a normal property when nested in a reactive object
+        /* const a = ref(1)
+        const obj = reactive({
+            a,
+            b: {
+                c: a
+            }
+        })
+
+        let dummy1
+        let dummy2
+
+        effect(() => {
+            dummy1 = obj.a
+            dummy2 = obj.b.c
+        })
+
+        console.log(dummy1, dummy2)
+        a.value++
+        console.log(dummy1, dummy2)
+        obj.a++
+        console.log(dummy1, dummy2)
+        obj.b.c++
+        console.log(dummy1, dummy2) */
+
+        // should unwrap nested ref in types
+        /* const a = ref(0)
+        const b = ref(a)
+
+        console.log(typeof (b.value + 1)) // toBe('number') */
+
+        // should unwrap nested values in types
+        /* const a = {
+            b: ref(0)
+        }
+
+        const c = ref(a)
+
+        console.log(typeof (c.value.b + 1)) // toBe('number') */
+
+        // should keep symbols
+        /* const customSymbol = Symbol()
+        const obj = {
+            [Symbol.asyncIterator]: { a: 1 },
+            [Symbol.unscopables]: { b: '1' },
+            [customSymbol]: { c: [1, 2, 3] }
+        }
+
+        const objRef = ref(obj)
+
+        console.log(objRef.value[Symbol.asyncIterator]) // toBe(obj[Symbol.asyncIterator])
+        console.log(objRef.value[Symbol.unscopables]) // toBe(obj[Symbol.unscopables])
+        console.log(objRef.value[customSymbol]) // toStrictEqual(obj[customSymbol]) */
+
+        // unref
+        /* console.log(unref(1)) // toBe(1)
+        console.log(unref(ref(1))) // toBe(1) */
+
+        // shallowRef
+        /* const sref = shallowRef({ a: 1 })
+        console.log(isReactive(sref.value)) // toBe(false)
+
+        let dummy
+        effect(() => {
+            dummy = sref.value.a
+        })
+        console.log(dummy) // toBe(1)
+
+        sref.value = { a: 2 }
+        console.log(isReactive(sref.value)) // toBe(false)
+        console.log(dummy) // toBe(2) */
+
+        // shallowRef force trigger
+        /* const sref = shallowRef({ a: 1 })
+        let dummy
+        effect(() => {
+            dummy = sref.value.a
+        })
+        console.log(dummy) // toBe(1)
+
+        sref.value.a = 2
+        console.log(dummy) // toBe(1) // should not trigger yet
+
+        // force trigger
+        triggerRef(sref)
+        console.log(dummy) // toBe(2) */
+
+        // toRef
+        /* const a = reactive({
+            x: 1
+        })
+        const x = toRef(a, 'x')
+        console.log(isRef(x)) // toBe(true)
+        console.log(x.value) // toBe(1)
+
+        // source -> proxy
+        a.x = 2
+        console.log(x.value) // toBe(2)
+
+        // proxy -> source
+        x.value = 3
+        console.log(a.x) // toBe(3)
+
+        // reactivity
+        let dummyX
+        effect(() => {
+            dummyX = x.value
+        })
+        console.log(dummyX) // toBe(x.value)
+
+        // mutating source should trigger effect using the proxy refs
+        a.x = 4
+        console.log(dummyX) // toBe(4) */
+
+        // toRefs
+        /* const a = reactive({
+            x: 1,
+            y: 2
+        })
+
+        const { x, y } = toRefs(a)
+
+        console.log(isRef(x)) // toBe(true)
+        console.log(isRef(y)) // toBe(true)
+        console.log(x.value) // toBe(1)
+        console.log(y.value) // toBe(2)
+
+        // source -> proxy
+        a.x = 2
+        a.y = 3
+        console.log(x.value) // toBe(2)
+        console.log(y.value) // toBe(3)
+
+        // proxy -> source
+        x.value = 3
+        y.value = 4
+        console.log(a.x) // toBe(3)
+        console.log(a.y) // toBe(4)
+
+        // reactivity
+        let dummyX, dummyY
+        effect(() => {
+            dummyX = x.value
+            dummyY = y.value
+        })
+        console.log(dummyX) // toBe(x.value)
+        console.log(dummyY) // toBe(y.value)
+
+        // mutating source should trigger effect using the proxy refs
+        a.x = 4
+        a.y = 5
+        console.log(dummyX) // toBe(4)
+        console.log(dummyY) // toBe(5) */
+
+        // customRef
+        let value = 1
+        let _trigger
+
+        const custom = customRef((track, trigger) => ({
+            get() {
+                track()
+                return value
+            },
+            set(newValue) {
+                value = newValue
+                _trigger = trigger
+            }
+        }))
+
+        console.log(isRef(custom)) // toBe(true)
+
+        let dummy
+        effect(() => {
+            dummy = custom.value
+        })
+        console.log(dummy) // toBe(1)
+
+        custom.value = 2
+        // should not trigger yet
+        console.log(dummy) // toBe(1)
+
+        _trigger()
+        console.log(dummy) // toBe(2)
 
     </script>
 </body>
