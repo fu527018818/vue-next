@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>effect</title>
+    <style>
+        .lay-img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <img class="lay-img" src="./effect.png" alt="">
+    </div>
+    <script src="../../../dist/reactivity.global.js"></script>
+    <script>
+        const {
+            reactive,
+
+            effect,
+            stop,
+            trigger,
+            track,
+            enableTracking,
+            pauseTracking,
+            resetTracking
+        } = VueReactivity
+
+        // 单测
+        let dummy
+        const counter = reactive({ num: 0 })
+        effect(() => {
+            dummy = counter.num
+        })
+
+        console.log(dummy) // toBe(0)
+        counter.num = 7
+        console.log(dummy) // toBe(7)
+    </script>
+</body>
+</html>

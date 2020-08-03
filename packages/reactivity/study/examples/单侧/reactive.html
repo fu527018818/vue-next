@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reactive</title>
+</head>
+<body>
+    <script src="../../../dist/reactivity.global.js"></script>
+    <script>
+        const { 
+            reactive,
+            readonly,
+            isReactive,
+            isReadonly,
+            isProxy,
+            shallowReactive,
+            shallowReadonly,
+            markRaw,
+            toRaw
+        } = VueReactivity
+
+        // reactive.ts
+
+        // 伪代码
+        function reactiveFn(value) {
+            let proxy = new Proxy(value, {
+                get() {},
+                set() {},
+                deletePrototype() {},
+                has(){},
+                ownKeys() {}
+            })
+            Object.defineProperty(value, '__v_readonly|__v_reactive', {
+                configurable: true,
+                enumerable: false,
+                value: proxy
+            })
+            return proxy
+        }
+
+        // 单侧
+        const original = { foo: 1 }
+        const observed = reactive(original)
+        // set
+        observed.bar = 1
+        console.log(observed.bar) // toBe(1)
+        console.log(original.bar) // toBe(1)
+        // delete
+        delete observed.foo
+        console.log('foo' in observed) // toBe(false)
+        console.log('foo' in original) // toBe(false)
+
+    </script>
+</body>
+</html>

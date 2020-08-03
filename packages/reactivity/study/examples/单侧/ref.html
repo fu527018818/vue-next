@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ref</title>
+</head>
+<body>
+    <script src="../../../dist/reactivity.global.js"></script>
+    <script>
+        const { 
+            reactive,  
+            effect,
+
+            ref,
+            unref,
+            shallowRef,
+            isRef,
+            toRef,
+            toRefs,
+            customRef,
+            triggerRef
+        } = VueReactivity
+
+        // 单测
+        const a = ref({
+            count: 1
+        })
+        let dummy
+        effect(() => {
+            dummy = a.value.count
+        })
+        console.log(dummy) //toBe(1)
+        a.value.count = 2
+        console.log(dummy) //toBe(2)
+    </script>
+</body>
+</html>

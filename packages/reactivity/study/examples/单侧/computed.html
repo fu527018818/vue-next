@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>computed</title>
+</head>
+<body>
+    <script src="../../../dist/reactivity.global.js"></script>
+    <script>
+        const { 
+            reactive, 
+            effect,
+            
+            computed,
+            ComputedRef,
+            WritableComputedRef,
+            WritableComputedOptions,
+            ComputedGetter,
+            ComputedSetter
+        } = VueReactivity
+
+        // 单测
+        const value = reactive({})
+        const cValue = computed(() => value.foo)
+        let dummy
+        effect(() => {
+            dummy = cValue.value
+        })
+        
+        console.log(dummy) // toBe(undefined)
+        value.foo = 1
+        console.log(dummy)
+    </script>
+</body>
+</html>
